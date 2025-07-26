@@ -1,0 +1,147 @@
+{
+  "id": null,
+  "title": "Alertmanager Dashboard",
+  "tags": [
+    "sre",
+    "alertmanager",
+    "alerts"
+  ],
+  "timezone": "browser",
+  "panels": [
+    {
+      "id": 1,
+      "title": "Active Alerts",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "alertmanager_alerts{state=\"active\"}",
+          "legendFormat": "Active Alerts"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "yellow",
+                "value": 1
+              },
+              {
+                "color": "red",
+                "value": 5
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 2,
+      "title": "Alert Notifications Sent",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(alertmanager_notifications_total[5m])",
+          "legendFormat": "{{integration}}"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Alert Notification Failures",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "rate(alertmanager_notifications_failed_total[5m])",
+          "legendFormat": "{{integration}}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Alert Group Count",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "alertmanager_alert_groups",
+          "legendFormat": "Alert Groups"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Silenced Alerts",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "alertmanager_silences{state=\"active\"}",
+          "legendFormat": "Silenced Alerts"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Alertmanager Uptime",
+      "type": "stat",
+      "targets": [
+        {
+          "expr": "up{job=\"alertmanager\"}",
+          "legendFormat": "Alertmanager Status"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "red",
+                "value": null
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 7,
+      "title": "Alert Processing Duration",
+      "type": "graph",
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(alertmanager_dispatcher_aggregation_groups_duration_seconds_bucket[5m]))",
+          "legendFormat": "95th percentile"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Alert Rules by Severity",
+      "type": "piechart",
+      "targets": [
+        {
+          "expr": "count by(severity) (ALERTS{alertstate=\"firing\"})",
+          "legendFormat": "{{severity}}"
+        }
+      ]
+    }
+  ],
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "refresh": "30s"
+}

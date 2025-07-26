@@ -1,0 +1,73 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: monitoring
+data:
+  alertmanager.yml: |
+    global:
+      resolve_timeout: 5m
+      slack_api_url: 'https://hooks.slack.com/services/YOUR_SLACK_WEBHOOK_URL'
+    
+    route:
+      group_by: ['alertname', 'job']
+      group_wait: 30s
+      group_interval: 5m
+      repeat_interval: 12h
+      receiver: 'slack-notifications'
+      routes:
+      - match:
+          severity: critical
+        receiver: 'slack-critical'
+        continue: true
+      - match:
+          severity: warning
+        receiver: 'slack-warnings'
+    
+    receivers:
+    - name: 'slack-notifications'
+      slack_configs:
+      - channel: '#alerts'
+        title: '{{ template "slack.title" . }}'
+        text: '{{ template "slack.text" . }}'
+        send_resolved: true
+    
+    - name: 'slack-critical'
+      slack_configs:
+      - channel: '#critical-alerts'
+        title: '🚨 CRITICAL: {{ template "slack.title" . }}'
+        text: '{{ template "slack.text" . }}'
+        send_resolved: true
+    
+    - name: 'slack-warnings'
+      slack_configs:
+      - channel: '#warnings'
+        title: '⚠️ WARNING: {{ template "slack.title" . }}'
+        text: '{{ template "slack.text" . }}'
+        send_resolved: true
+    
+    templates:
+    - '/etc/alertmanager/template/*.tmpl'
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-templates
+  namespace: monitoring
+data:
+  slack.tmpl: |
+    {{ define "slack.title" }}
+    [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}
+    {{ end }}
+    
+    {{ define "slack.text" }}
+    {{ range .Alerts }}
+    *Alert:* {{ .Annotations.summary }}
+    *Description:* {{ .Annotations.description }}
+    *Severity:* {{ .Labels.severity }}
+    *Job:* {{ .Labels.job }}
+    *Instance:* {{ .Labels.instance }}
+    *Started:* {{ .StartsAt | since }}
+    {{ if .EndsAt }}*Ended:* {{ .EndsAt | since }}{{ end }}
+    {{ end }}
+    {{ end }}

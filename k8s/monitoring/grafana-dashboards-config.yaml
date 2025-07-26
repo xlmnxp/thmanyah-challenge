@@ -1,0 +1,817 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboards
+  namespace: monitoring
+data:
+  main-api-dashboard.json: |
+    {
+        "id": null,
+        "title": "Main API Service - Comprehensive Dashboard",
+        "tags": ["sre", "api", "main-api"],
+        "timezone": "browser",
+        "refresh": "30s",
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "panels": [
+          {
+            "id": 1,
+            "title": "Request Rate (req/sec)",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+            "targets": [
+              {
+                "expr": "sum(rate(http_requests_total{job=\"main-api-service\"}[5m])) by (method)",
+                "legendFormat": "{{method}}"
+              }
+            ],
+            "yAxes": [
+              {"label": "Requests/sec", "min": 0}
+            ]
+          },
+          {
+            "id": 2,
+            "title": "Response Time (95th percentile)",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"main-api-service\"}[5m])) by (le, method))",
+                "legendFormat": "{{method}}"
+              }
+            ],
+            "yAxes": [
+              {"label": "Seconds", "min": 0}
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Error Rate (5xx)",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+            "targets": [
+              {
+                "expr": "sum(rate(http_requests_total{job=\"main-api-service\", status=~\"5..\"}[5m])) by (status)",
+                "legendFormat": "{{status}}"
+              }
+            ],
+            "yAxes": [
+              {"label": "Errors/sec", "min": 0}
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Active Connections",
+            "type": "stat",
+            "gridPos": {"h": 4, "w": 6, "x": 12, "y": 8},
+            "targets": [
+              {
+                "expr": "nodejs_active_handles{job=\"main-api-service\"}",
+                "legendFormat": "Active Handles"
+              }
+            ]
+          },
+          {
+            "id": 5,
+            "title": "Memory Usage",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+            "targets": [
+              {
+                "expr": "nodejs_heap_size_used_bytes{job=\"main-api-service\"} / 1024 / 1024",
+                "legendFormat": "Heap Used (MB)"
+              },
+              {
+                "expr": "nodejs_heap_size_total_bytes{job=\"main-api-service\"} / 1024 / 1024",
+                "legendFormat": "Heap Total (MB)"
+              }
+            ],
+            "yAxes": [
+              {"label": "MB", "min": 0}
+            ]
+          },
+          {
+            "id": 6,
+            "title": "CPU Usage",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+            "targets": [
+              {
+                "expr": "rate(process_cpu_seconds_total{job=\"main-api-service\"}[5m]) * 100",
+                "legendFormat": "CPU %"
+              }
+            ],
+            "yAxes": [
+              {"label": "CPU %", "min": 0, "max": 100}
+            ]
+          },
+          {
+            "id": 7,
+            "title": "Endpoint Performance",
+            "type": "table",
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 24},
+            "targets": [
+              {
+                "expr": "sum(rate(http_requests_total{job=\"main-api-service\"}[5m])) by (endpoint, method)",
+                "format": "table",
+                "instant": true
+              }
+            ],
+            "transformations": [
+              {
+                "id": "organize",
+                "options": {
+                  "excludeByName": {"Time": true},
+                  "indexByName": {},
+                  "renameByName": {
+                    "Value": "Request Rate",
+                    "endpoint": "Endpoint",
+                    "method": "Method"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+    }
+  auth-service-dashboard.json: |
+    {
+        "id": null,
+        "title": "Auth Service - Security Dashboard",
+        "tags": ["sre", "auth", "security"],
+        "timezone": "browser",
+        "refresh": "30s",
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "panels": [
+          {
+            "id": 1,
+            "title": "Authentication Attempts",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+            "targets": [
+              {
+                "expr": "rate(auth_attempts_total{job=\"auth-service\"}[5m])",
+                "legendFormat": "{{success}}"
+              }
+            ],
+            "yAxes": [
+              {"label": "Attempts/sec", "min": 0}
+            ]
+          },
+          {
+            "id": 2,
+            "title": "Failed Login Attempts",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+            "targets": [
+              {
+                "expr": "rate(auth_failures_total{job=\"auth-service\"}[5m])",
+                "legendFormat": "Failed Logins"
+              }
+            ],
+            "yAxes": [
+              {"label": "Failures/sec", "min": 0}
+            ]
+          },
+          {
+            "id": 3,
+            "title": "JWT Token Operations",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+            "targets": [
+              {
+                "expr": "rate(jwt_tokens_created_total{job=\"auth-service\"}[5m])",
+                "legendFormat": "Tokens Created"
+              },
+              {
+                "expr": "rate(jwt_tokens_validated_total{job=\"auth-service\"}[5m])",
+                "legendFormat": "Tokens Validated"
+              }
+            ],
+            "yAxes": [
+              {"label": "Operations/sec", "min": 0}
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Request Rate by Endpoint",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+            "targets": [
+              {
+                "expr": "sum(rate(http_requests_total{job=\"auth-service\"}[5m])) by (endpoint, method)",
+                "legendFormat": "{{method}} {{endpoint}}"
+              }
+            ],
+            "yAxes": [
+              {"label": "Requests/sec", "min": 0}
+            ]
+          },
+          {
+            "id": 5,
+            "title": "Response Time (95th percentile)",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"auth-service\"}[5m])) by (le, endpoint))",
+                "legendFormat": "{{endpoint}}"
+              }
+            ],
+            "yAxes": [
+              {"label": "Seconds", "min": 0}
+            ]
+          },
+          {
+            "id": 6,
+            "title": "Error Rate",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+            "targets": [
+              {
+                "expr": "sum(rate(http_requests_total{job=\"auth-service\", status=~\"4..|5..\"}[5m])) by (status)",
+                "legendFormat": "{{status}}"
+              }
+            ],
+            "yAxes": [
+              {"label": "Errors/sec", "min": 0}
+            ]
+          },
+          {
+            "id": 7,
+            "title": "Active Sessions",
+            "type": "stat",
+            "gridPos": {"h": 4, "w": 6, "x": 0, "y": 24},
+            "targets": [
+              {
+                "expr": "auth_active_sessions{job=\"auth-service\"}",
+                "legendFormat": "Active Sessions"
+              }
+            ]
+          },
+          {
+            "id": 8,
+            "title": "Database Connections",
+            "type": "stat",
+            "gridPos": {"h": 4, "w": 6, "x": 6, "y": 24},
+            "targets": [
+              {
+                "expr": "db_connections_active{job=\"auth-service\"}",
+                "legendFormat": "DB Connections"
+              }
+            ]
+          },
+          {
+            "id": 9,
+            "title": "Security Events",
+            "type": "table",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24},
+            "targets": [
+              {
+                "expr": "sum(rate(security_events_total{job=\"auth-service\"}[5m])) by (event_type)",
+                "format": "table",
+                "instant": true
+              }
+            ],
+            "transformations": [
+              {
+                "id": "organize",
+                "options": {
+                  "excludeByName": {"Time": true},
+                  "indexByName": {},
+                  "renameByName": {
+                    "Value": "Events/sec",
+                    "event_type": "Event Type"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+    }
+  image-service-dashboard.json: |
+    {
+        "id": null,
+        "title": "Image Service - Storage Dashboard",
+        "tags": ["sre", "image", "storage"],
+        "timezone": "browser",
+        "refresh": "30s",
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "panels": [
+          {
+            "id": 1,
+            "title": "Image Uploads",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+            "targets": [
+              {
+                "expr": "rate(image_uploads_total{job=\"image-service\"}[5m])",
+                "legendFormat": "{{status}}"
+              }
+            ],
+            "yAxes": [
+              {"label": "Uploads/sec", "min": 0}
+            ]
+          },
+          {
+            "id": 2,
+            "title": "Image Downloads",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+            "targets": [
+              {
+                "expr": "rate(image_downloads_total{job=\"image-service\"}[5m])",
+                "legendFormat": "{{status}}"
+              }
+            ],
+            "yAxes": [
+              {"label": "Downloads/sec", "min": 0}
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Storage Usage",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+            "targets": [
+              {
+                "expr": "image_storage_bytes_used{job=\"image-service\"} / 1024 / 1024 / 1024",
+                "legendFormat": "Storage Used (GB)"
+              },
+              {
+                "expr": "image_storage_bytes_total{job=\"image-service\"} / 1024 / 1024 / 1024",
+                "legendFormat": "Storage Total (GB)"
+              }
+            ],
+            "yAxes": [
+              {"label": "GB", "min": 0}
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Image Processing Time",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, sum(rate(image_processing_duration_seconds_bucket{job=\"image-service\"}[5m])) by (le, operation))",
+                "legendFormat": "{{operation}}"
+              }
+            ],
+            "yAxes": [
+              {"label": "Seconds", "min": 0}
+            ]
+          },
+          {
+            "id": 5,
+            "title": "Request Rate by Endpoint",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+            "targets": [
+              {
+                "expr": "sum(rate(http_requests_total{job=\"image-service\"}[5m])) by (endpoint, method)",
+                "legendFormat": "{{method}} {{endpoint}}"
+              }
+            ],
+            "yAxes": [
+              {"label": "Requests/sec", "min": 0}
+            ]
+          },
+          {
+            "id": 6,
+            "title": "Error Rate",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+            "targets": [
+              {
+                "expr": "sum(rate(http_requests_total{job=\"image-service\", status=~\"4..|5..\"}[5m])) by (status)",
+                "legendFormat": "{{status}}"
+              }
+            ],
+            "yAxes": [
+              {"label": "Errors/sec", "min": 0}
+            ]
+          },
+          {
+            "id": 7,
+            "title": "Total Images",
+            "type": "stat",
+            "gridPos": {"h": 4, "w": 6, "x": 0, "y": 24},
+            "targets": [
+              {
+                "expr": "image_count_total{job=\"image-service\"}",
+                "legendFormat": "Total Images"
+              }
+            ]
+          },
+          {
+            "id": 8,
+            "title": "Average Image Size",
+            "type": "stat",
+            "gridPos": {"h": 4, "w": 6, "x": 6, "y": 24},
+            "targets": [
+              {
+                "expr": "image_average_size_bytes{job=\"image-service\"} / 1024 / 1024",
+                "legendFormat": "Avg Size (MB)"
+              }
+            ]
+          },
+          {
+            "id": 9,
+            "title": "Cache Hit Rate",
+            "type": "stat",
+            "gridPos": {"h": 4, "w": 6, "x": 12, "y": 24},
+            "targets": [
+              {
+                "expr": "rate(image_cache_hits_total{job=\"image-service\"}[5m]) / (rate(image_cache_hits_total{job=\"image-service\"}[5m]) + rate(image_cache_misses_total{job=\"image-service\"}[5m])) * 100",
+                "legendFormat": "Cache Hit Rate %"
+              }
+            ]
+          },
+          {
+            "id": 10,
+            "title": "Image Operations Summary",
+            "type": "table",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 28},
+            "targets": [
+              {
+                "expr": "sum(rate(image_operations_total{job=\"image-service\"}[5m])) by (operation_type)",
+                "format": "table",
+                "instant": true
+              }
+            ],
+            "transformations": [
+              {
+                "id": "organize",
+                "options": {
+                  "excludeByName": {"Time": true},
+                  "indexByName": {},
+                  "renameByName": {
+                    "Value": "Operations/sec",
+                    "operation_type": "Operation Type"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+    }
+  system-overview-dashboard.json: |
+    {
+        "id": null,
+        "title": "System Overview - Infrastructure Dashboard",
+        "tags": ["sre", "overview", "infrastructure"],
+        "timezone": "browser",
+        "refresh": "30s",
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "panels": [
+          {
+            "id": 1,
+            "title": "Cluster CPU Usage",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+            "targets": [
+              {
+                "expr": "100 - (avg by(instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+                "legendFormat": "{{instance}}"
+              }
+            ],
+            "yAxes": [
+              {"label": "CPU %", "min": 0, "max": 100}
+            ]
+          },
+          {
+            "id": 2,
+            "title": "Cluster Memory Usage",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+            "targets": [
+              {
+                "expr": "(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100",
+                "legendFormat": "{{instance}}"
+              }
+            ],
+            "yAxes": [
+              {"label": "Memory %", "min": 0, "max": 100}
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Service Health Status",
+            "type": "stat",
+            "gridPos": {"h": 4, "w": 24, "x": 0, "y": 8},
+            "targets": [
+              {
+                "expr": "up",
+                "legendFormat": "{{job}}"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "thresholds": {
+                  "steps": [
+                    {"color": "red", "value": 0},
+                    {"color": "green", "value": 1}
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 4,
+            "title": "Pod Status by Namespace",
+            "type": "table",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+            "targets": [
+              {
+                "expr": "sum by (namespace, pod) (kube_pod_status_phase)",
+                "format": "table",
+                "instant": true
+              }
+            ],
+            "transformations": [
+              {
+                "id": "organize",
+                "options": {
+                  "excludeByName": {"Time": true},
+                  "indexByName": {},
+                  "renameByName": {
+                    "Value": "Status",
+                    "namespace": "Namespace",
+                    "pod": "Pod"
+                  }
+                }
+              }
+            ]
+          },
+          {
+            "id": 5,
+            "title": "Database Connections",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+            "targets": [
+              {
+                "expr": "pg_stat_database_numbackends{job=\"postgresql\"}",
+                "legendFormat": "{{datname}}"
+              }
+            ],
+            "yAxes": [
+              {"label": "Connections", "min": 0}
+            ]
+          },
+          {
+            "id": 6,
+            "title": "Redis Memory Usage",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 20},
+            "targets": [
+              {
+                "expr": "redis_memory_used_bytes{job=\"redis\"} / 1024 / 1024",
+                "legendFormat": "Memory Used (MB)"
+              },
+              {
+                "expr": "redis_memory_max_bytes{job=\"redis\"} / 1024 / 1024",
+                "legendFormat": "Memory Max (MB)"
+              }
+            ],
+            "yAxes": [
+              {"label": "MB", "min": 0}
+            ]
+          },
+          {
+            "id": 7,
+            "title": "MinIO Storage Usage",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 20},
+            "targets": [
+              {
+                "expr": "minio_bucket_usage_object_total{job=\"minio\"}",
+                "legendFormat": "{{bucket}} Objects"
+              }
+            ],
+            "yAxes": [
+              {"label": "Objects", "min": 0}
+            ]
+          },
+          {
+            "id": 8,
+            "title": "Network Traffic",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 0, "y": 28},
+            "targets": [
+              {
+                "expr": "rate(node_network_receive_bytes_total[5m]) / 1024 / 1024",
+                "legendFormat": "{{device}} Receive (MB/s)"
+              },
+              {
+                "expr": "rate(node_network_transmit_bytes_total[5m]) / 1024 / 1024",
+                "legendFormat": "{{device}} Transmit (MB/s)"
+              }
+            ],
+            "yAxes": [
+              {"label": "MB/s", "min": 0}
+            ]
+          },
+          {
+            "id": 9,
+            "title": "Disk Usage",
+            "type": "graph",
+            "gridPos": {"h": 8, "w": 12, "x": 12, "y": 28},
+            "targets": [
+              {
+                "expr": "(node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes * 100",
+                "legendFormat": "{{instance}} {{mountpoint}}"
+              }
+            ],
+            "yAxes": [
+              {"label": "Usage %", "min": 0, "max": 100}
+            ]
+          },
+          {
+            "id": 10,
+            "title": "Kubernetes Events (Last Hour)",
+            "type": "table",
+            "gridPos": {"h": 8, "w": 24, "x": 0, "y": 36},
+            "targets": [
+              {
+                "expr": "kube_event_count",
+                "format": "table",
+                "instant": true
+              }
+            ],
+            "transformations": [
+              {
+                "id": "organize",
+                "options": {
+                  "excludeByName": {"Time": true},
+                  "indexByName": {},
+                  "renameByName": {
+                    "Value": "Event Count",
+                    "namespace": "Namespace",
+                    "reason": "Reason",
+                    "type": "Type"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+    }
+  alertmanager-dashboard.json: |
+    {
+        "id": null,
+        "title": "Alertmanager Dashboard",
+        "tags": ["sre", "alertmanager", "alerts"],
+        "timezone": "browser",
+        "panels": [
+          {
+            "id": 1,
+            "title": "Active Alerts",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "alertmanager_alerts{state=\"active\"}",
+                "legendFormat": "Active Alerts"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "thresholds": {
+                  "steps": [
+                    {
+                      "color": "green",
+                      "value": null
+                    },
+                    {
+                      "color": "yellow",
+                      "value": 1
+                    },
+                    {
+                      "color": "red",
+                      "value": 5
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 2,
+            "title": "Alert Notifications Sent",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(alertmanager_notifications_total[5m])",
+                "legendFormat": "{{integration}}"
+              }
+            ]
+          },
+          {
+            "id": 3,
+            "title": "Alert Notification Failures",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "rate(alertmanager_notifications_failed_total[5m])",
+                "legendFormat": "{{integration}}"
+              }
+            ]
+          },
+          {
+            "id": 4,
+            "title": "Alert Group Count",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "alertmanager_alert_groups",
+                "legendFormat": "Alert Groups"
+              }
+            ]
+          },
+          {
+            "id": 5,
+            "title": "Silenced Alerts",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "alertmanager_silences{state=\"active\"}",
+                "legendFormat": "Silenced Alerts"
+              }
+            ]
+          },
+          {
+            "id": 6,
+            "title": "Alertmanager Uptime",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "up{job=\"alertmanager\"}",
+                "legendFormat": "Alertmanager Status"
+              }
+            ],
+            "fieldConfig": {
+              "defaults": {
+                "color": {
+                  "mode": "thresholds"
+                },
+                "thresholds": {
+                  "steps": [
+                    {
+                      "color": "red",
+                      "value": null
+                    },
+                    {
+                      "color": "green",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          {
+            "id": 7,
+            "title": "Alert Processing Duration",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "histogram_quantile(0.95, rate(alertmanager_dispatcher_aggregation_groups_duration_seconds_bucket[5m]))",
+                "legendFormat": "95th percentile"
+              }
+            ]
+          },
+          {
+            "id": 8,
+            "title": "Alert Rules by Severity",
+            "type": "piechart",
+            "targets": [
+              {
+                "expr": "count by(severity) (ALERTS{alertstate=\"firing\"})",
+                "legendFormat": "{{severity}}"
+              }
+            ]
+          }
+        ],
+        "time": {
+          "from": "now-1h",
+          "to": "now"
+        },
+        "refresh": "30s"
+    }

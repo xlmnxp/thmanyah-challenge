@@ -1,0 +1,294 @@
+{
+  "id": null,
+  "title": "System Overview - Infrastructure Dashboard",
+  "tags": [
+    "sre",
+    "overview",
+    "infrastructure"
+  ],
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Cluster CPU Usage",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "100 - (avg by(instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "yAxes": [
+        {
+          "label": "CPU %",
+          "min": 0,
+          "max": 100
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Cluster Memory Usage",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) / node_memory_MemTotal_bytes * 100",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "yAxes": [
+        {
+          "label": "Memory %",
+          "min": 0,
+          "max": 100
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Service Health Status",
+      "type": "stat",
+      "gridPos": {
+        "h": 4,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "up",
+          "legendFormat": "{{job}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "steps": [
+              {
+                "color": "red",
+                "value": 0
+              },
+              {
+                "color": "green",
+                "value": 1
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "id": 4,
+      "title": "Pod Status by Namespace",
+      "type": "table",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 12
+      },
+      "targets": [
+        {
+          "expr": "sum by (namespace, pod) (kube_pod_status_phase)",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "Value": "Status",
+              "namespace": "Namespace",
+              "pod": "Pod"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Database Connections",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 12
+      },
+      "targets": [
+        {
+          "expr": "pg_stat_database_numbackends{job=\"postgresql\"}",
+          "legendFormat": "{{datname}}"
+        }
+      ],
+      "yAxes": [
+        {
+          "label": "Connections",
+          "min": 0
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Redis Memory Usage",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 20
+      },
+      "targets": [
+        {
+          "expr": "redis_memory_used_bytes{job=\"redis\"} / 1024 / 1024",
+          "legendFormat": "Memory Used (MB)"
+        },
+        {
+          "expr": "redis_memory_max_bytes{job=\"redis\"} / 1024 / 1024",
+          "legendFormat": "Memory Max (MB)"
+        }
+      ],
+      "yAxes": [
+        {
+          "label": "MB",
+          "min": 0
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "MinIO Storage Usage",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 20
+      },
+      "targets": [
+        {
+          "expr": "minio_bucket_usage_object_total{job=\"minio\"}",
+          "legendFormat": "{{bucket}} Objects"
+        }
+      ],
+      "yAxes": [
+        {
+          "label": "Objects",
+          "min": 0
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Network Traffic",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 28
+      },
+      "targets": [
+        {
+          "expr": "rate(node_network_receive_bytes_total[5m]) / 1024 / 1024",
+          "legendFormat": "{{device}} Receive (MB/s)"
+        },
+        {
+          "expr": "rate(node_network_transmit_bytes_total[5m]) / 1024 / 1024",
+          "legendFormat": "{{device}} Transmit (MB/s)"
+        }
+      ],
+      "yAxes": [
+        {
+          "label": "MB/s",
+          "min": 0
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Disk Usage",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 28
+      },
+      "targets": [
+        {
+          "expr": "(node_filesystem_size_bytes - node_filesystem_free_bytes) / node_filesystem_size_bytes * 100",
+          "legendFormat": "{{instance}} {{mountpoint}}"
+        }
+      ],
+      "yAxes": [
+        {
+          "label": "Usage %",
+          "min": 0,
+          "max": 100
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Kubernetes Events (Last Hour)",
+      "type": "table",
+      "gridPos": {
+        "h": 8,
+        "w": 24,
+        "x": 0,
+        "y": 36
+      },
+      "targets": [
+        {
+          "expr": "kube_event_count",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "Value": "Event Count",
+              "namespace": "Namespace",
+              "reason": "Reason",
+              "type": "Type"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

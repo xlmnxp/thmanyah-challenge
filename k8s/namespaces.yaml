@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: applications
+  labels:
+    name: applications
+    purpose: application-services
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: infrastructure
+  labels:
+    name: infrastructure
+    purpose: data-storage
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  labels:
+    name: monitoring
+    purpose: observability
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ingress-nginx
+  labels:
+    name: ingress-nginx
+    purpose: ingress-controller
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cert-manager
+  labels:
+    name: cert-manager
+    purpose: certificate-management 

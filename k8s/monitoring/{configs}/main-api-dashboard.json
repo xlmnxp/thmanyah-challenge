@@ -1,0 +1,188 @@
+{
+    "id": null,
+    "title": "Main API Service - Comprehensive Dashboard",
+    "tags": [
+        "sre",
+        "api",
+        "main-api"
+    ],
+    "timezone": "browser",
+    "refresh": "30s",
+    "time": {
+        "from": "now-1h",
+        "to": "now"
+    },
+    "panels": [
+        {
+            "id": 1,
+            "title": "Request Rate (req/sec)",
+            "type": "graph",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 0
+            },
+            "targets": [
+                {
+                    "expr": "sum(rate(http_requests_total{job=\"main-api-service\"}[5m])) by (method)",
+                    "legendFormat": "{{method}}"
+                }
+            ],
+            "yAxes": [
+                {
+                    "label": "Requests/sec",
+                    "min": 0
+                }
+            ]
+        },
+        {
+            "id": 2,
+            "title": "Response Time (95th percentile)",
+            "type": "graph",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 0
+            },
+            "targets": [
+                {
+                    "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"main-api-service\"}[5m])) by (le, method))",
+                    "legendFormat": "{{method}}"
+                }
+            ],
+            "yAxes": [
+                {
+                    "label": "Seconds",
+                    "min": 0
+                }
+            ]
+        },
+        {
+            "id": 3,
+            "title": "Error Rate (5xx)",
+            "type": "graph",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 8
+            },
+            "targets": [
+                {
+                    "expr": "sum(rate(http_requests_total{job=\"main-api-service\", status=~\"5..\"}[5m])) by (status)",
+                    "legendFormat": "{{status}}"
+                }
+            ],
+            "yAxes": [
+                {
+                    "label": "Errors/sec",
+                    "min": 0
+                }
+            ]
+        },
+        {
+            "id": 4,
+            "title": "Active Connections",
+            "type": "stat",
+            "gridPos": {
+                "h": 4,
+                "w": 6,
+                "x": 12,
+                "y": 8
+            },
+            "targets": [
+                {
+                    "expr": "nodejs_active_handles{job=\"main-api-service\"}",
+                    "legendFormat": "Active Handles"
+                }
+            ]
+        },
+        {
+            "id": 5,
+            "title": "Memory Usage",
+            "type": "graph",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 0,
+                "y": 16
+            },
+            "targets": [
+                {
+                    "expr": "nodejs_heap_size_used_bytes{job=\"main-api-service\"} / 1024 / 1024",
+                    "legendFormat": "Heap Used (MB)"
+                },
+                {
+                    "expr": "nodejs_heap_size_total_bytes{job=\"main-api-service\"} / 1024 / 1024",
+                    "legendFormat": "Heap Total (MB)"
+                }
+            ],
+            "yAxes": [
+                {
+                    "label": "MB",
+                    "min": 0
+                }
+            ]
+        },
+        {
+            "id": 6,
+            "title": "CPU Usage",
+            "type": "graph",
+            "gridPos": {
+                "h": 8,
+                "w": 12,
+                "x": 12,
+                "y": 16
+            },
+            "targets": [
+                {
+                    "expr": "rate(process_cpu_seconds_total{job=\"main-api-service\"}[5m]) * 100",
+                    "legendFormat": "CPU %"
+                }
+            ],
+            "yAxes": [
+                {
+                    "label": "CPU %",
+                    "min": 0,
+                    "max": 100
+                }
+            ]
+        },
+        {
+            "id": 7,
+            "title": "Endpoint Performance",
+            "type": "table",
+            "gridPos": {
+                "h": 8,
+                "w": 24,
+                "x": 0,
+                "y": 24
+            },
+            "targets": [
+                {
+                    "expr": "sum(rate(http_requests_total{job=\"main-api-service\"}[5m])) by (endpoint, method)",
+                    "format": "table",
+                    "instant": true
+                }
+            ],
+            "transformations": [
+                {
+                    "id": "organize",
+                    "options": {
+                        "excludeByName": {
+                            "Time": true
+                        },
+                        "indexByName": {},
+                        "renameByName": {
+                            "Value": "Request Rate",
+                            "endpoint": "Endpoint",
+                            "method": "Method"
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

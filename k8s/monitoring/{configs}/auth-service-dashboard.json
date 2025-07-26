@@ -1,0 +1,226 @@
+{
+  "id": null,
+  "title": "Auth Service - Security Dashboard",
+  "tags": [
+    "sre",
+    "auth",
+    "security"
+  ],
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Authentication Attempts",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "rate(auth_attempts_total{job=\"auth-service\"}[5m])",
+          "legendFormat": "{{success}}"
+        }
+      ],
+      "yAxes": [
+        {
+          "label": "Attempts/sec",
+          "min": 0
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Failed Login Attempts",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "rate(auth_failures_total{job=\"auth-service\"}[5m])",
+          "legendFormat": "Failed Logins"
+        }
+      ],
+      "yAxes": [
+        {
+          "label": "Failures/sec",
+          "min": 0
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "JWT Token Operations",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "rate(jwt_tokens_created_total{job=\"auth-service\"}[5m])",
+          "legendFormat": "Tokens Created"
+        },
+        {
+          "expr": "rate(jwt_tokens_validated_total{job=\"auth-service\"}[5m])",
+          "legendFormat": "Tokens Validated"
+        }
+      ],
+      "yAxes": [
+        {
+          "label": "Operations/sec",
+          "min": 0
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Request Rate by Endpoint",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{job=\"auth-service\"}[5m])) by (endpoint, method)",
+          "legendFormat": "{{method}} {{endpoint}}"
+        }
+      ],
+      "yAxes": [
+        {
+          "label": "Requests/sec",
+          "min": 0
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Response Time (95th percentile)",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job=\"auth-service\"}[5m])) by (le, endpoint))",
+          "legendFormat": "{{endpoint}}"
+        }
+      ],
+      "yAxes": [
+        {
+          "label": "Seconds",
+          "min": 0
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Error Rate",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{job=\"auth-service\", status=~\"4..|5..\"}[5m])) by (status)",
+          "legendFormat": "{{status}}"
+        }
+      ],
+      "yAxes": [
+        {
+          "label": "Errors/sec",
+          "min": 0
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Active Sessions",
+      "type": "stat",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 24
+      },
+      "targets": [
+        {
+          "expr": "auth_active_sessions{job=\"auth-service\"}",
+          "legendFormat": "Active Sessions"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Database Connections",
+      "type": "stat",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 24
+      },
+      "targets": [
+        {
+          "expr": "db_connections_active{job=\"auth-service\"}",
+          "legendFormat": "DB Connections"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Security Events",
+      "type": "table",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(security_events_total{job=\"auth-service\"}[5m])) by (event_type)",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "Value": "Events/sec",
+              "event_type": "Event Type"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,243 @@
+{
+  "id": null,
+  "title": "Image Service - Storage Dashboard",
+  "tags": [
+    "sre",
+    "image",
+    "storage"
+  ],
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Image Uploads",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "rate(image_uploads_total{job=\"image-service\"}[5m])",
+          "legendFormat": "{{status}}"
+        }
+      ],
+      "yAxes": [
+        {
+          "label": "Uploads/sec",
+          "min": 0
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Image Downloads",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "targets": [
+        {
+          "expr": "rate(image_downloads_total{job=\"image-service\"}[5m])",
+          "legendFormat": "{{status}}"
+        }
+      ],
+      "yAxes": [
+        {
+          "label": "Downloads/sec",
+          "min": 0
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Storage Usage",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "image_storage_bytes_used{job=\"image-service\"} / 1024 / 1024 / 1024",
+          "legendFormat": "Storage Used (GB)"
+        },
+        {
+          "expr": "image_storage_bytes_total{job=\"image-service\"} / 1024 / 1024 / 1024",
+          "legendFormat": "Storage Total (GB)"
+        }
+      ],
+      "yAxes": [
+        {
+          "label": "GB",
+          "min": 0
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Image Processing Time",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(image_processing_duration_seconds_bucket{job=\"image-service\"}[5m])) by (le, operation))",
+          "legendFormat": "{{operation}}"
+        }
+      ],
+      "yAxes": [
+        {
+          "label": "Seconds",
+          "min": 0
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "title": "Request Rate by Endpoint",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{job=\"image-service\"}[5m])) by (endpoint, method)",
+          "legendFormat": "{{method}} {{endpoint}}"
+        }
+      ],
+      "yAxes": [
+        {
+          "label": "Requests/sec",
+          "min": 0
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "title": "Error Rate",
+      "type": "graph",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{job=\"image-service\", status=~\"4..|5..\"}[5m])) by (status)",
+          "legendFormat": "{{status}}"
+        }
+      ],
+      "yAxes": [
+        {
+          "label": "Errors/sec",
+          "min": 0
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "title": "Total Images",
+      "type": "stat",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 0,
+        "y": 24
+      },
+      "targets": [
+        {
+          "expr": "image_count_total{job=\"image-service\"}",
+          "legendFormat": "Total Images"
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "title": "Average Image Size",
+      "type": "stat",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 6,
+        "y": 24
+      },
+      "targets": [
+        {
+          "expr": "image_average_size_bytes{job=\"image-service\"} / 1024 / 1024",
+          "legendFormat": "Avg Size (MB)"
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "title": "Cache Hit Rate",
+      "type": "stat",
+      "gridPos": {
+        "h": 4,
+        "w": 6,
+        "x": 12,
+        "y": 24
+      },
+      "targets": [
+        {
+          "expr": "rate(image_cache_hits_total{job=\"image-service\"}[5m]) / (rate(image_cache_hits_total{job=\"image-service\"}[5m]) + rate(image_cache_misses_total{job=\"image-service\"}[5m])) * 100",
+          "legendFormat": "Cache Hit Rate %"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "title": "Image Operations Summary",
+      "type": "table",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 28
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(image_operations_total{job=\"image-service\"}[5m])) by (operation_type)",
+          "format": "table",
+          "instant": true
+        }
+      ],
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "Time": true
+            },
+            "indexByName": {},
+            "renameByName": {
+              "Value": "Operations/sec",
+              "operation_type": "Operation Type"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

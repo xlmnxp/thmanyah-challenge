@@ -1,0 +1,11 @@
+Flask==2.3.3
+Flask-CORS==4.0.0
+prometheus-client==0.17.1
+redis==5.0.1
+psycopg2-binary==2.9.7
+boto3==1.28.44
+Pillow==10.0.1
+python-dotenv==1.0.0
+gunicorn==21.2.0
+werkzeug==2.3.7
+requests==2.31.0 
